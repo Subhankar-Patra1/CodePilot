@@ -73,7 +73,6 @@ const formSchema = z.object({
   code: z.string().min(1, "Code snippet cannot be empty."),
   language: z.string().min(1, "Please select a language."),
   strictness: z.enum(["lenient", "moderate", "strict"]),
-  apiKey: z.string().min(1, "API key is required."), // Add apiKey to schema
 });
 
 type CodeInputFormValues = z.infer<typeof formSchema>;
@@ -132,23 +131,8 @@ export function CodeInputForm({
       code: "",
       language: "javascript",
       strictness: "moderate",
-      apiKey: "", // Add apiKey default
     },
   });
-
-  const [apiKeyError, setApiKeyError] = React.useState<string | null>(null);
-  // Watch for changes to the form's apiKey value and clear error if valid
-  const watchedApiKey = form.watch("apiKey");
-  React.useEffect(() => {
-    if (
-      apiKeyError &&
-      watchedApiKey &&
-      watchedApiKey.startsWith(GEMINI_API_KEY_PREFIX) &&
-      watchedApiKey.length === GEMINI_API_KEY_LENGTH
-    ) {
-      setApiKeyError(null);
-    }
-  }, [watchedApiKey, apiKeyError]);
 
   // Sync form's apiKey value with localStorage on mount, reset, and storage events
   useEffect(() => {
@@ -157,19 +141,15 @@ export function CodeInputForm({
         code: "",
         language: "javascript",
         strictness: "moderate",
-        apiKey: "",
       });
-      setApiKeyError(null);
     }
     // Set apiKey from localStorage on mount/reset
     if (typeof window !== "undefined") {
       const apiKey = localStorage.getItem(GEMINI_API_KEY_STORAGE) || "";
-      form.setValue("apiKey", apiKey);
     }
     // Listen for changes to localStorage (Settings save) and update form value
     const onStorage = (e: StorageEvent) => {
       if (e.key === GEMINI_API_KEY_STORAGE) {
-        form.setValue("apiKey", e.newValue || "");
       }
     };
     window.addEventListener("storage", onStorage);
@@ -180,9 +160,6 @@ export function CodeInputForm({
   useEffect(() => {
     const checkApiKey = () => {
       const apiKey = localStorage.getItem(GEMINI_API_KEY_STORAGE) || "";
-      if (form.getValues("apiKey") !== apiKey) {
-        form.setValue("apiKey", apiKey);
-      }
     };
     window.addEventListener("focus", checkApiKey);
     return () => window.removeEventListener("focus", checkApiKey);
@@ -267,18 +244,7 @@ export function CodeInputForm({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (values: CodeInputFormValues) => {
-    const apiKey = values.apiKey || "";
-    if (
-      !apiKey.startsWith(GEMINI_API_KEY_PREFIX) ||
-      apiKey.length !== GEMINI_API_KEY_LENGTH
-    ) {
-      setApiKeyError(
-        "You need to save your API key first in Settings before reviewing code."
-      );
-      return;
-    }
-    setApiKeyError(null);
-    await onSubmit({ ...values, apiKey });
+    await onSubmit({ ...values });
   };
 
   return (
@@ -430,28 +396,6 @@ export function CodeInputForm({
                 accept=".js,.jsx,.ts,.tsx,.py,.java,.cs,.go,.rs,.php,.rb,.cpp,.cxx,.cc,.c,.h,.swift,.kt,.kts,.scala,.html,.htm,.css,.sql,text/plain"
               />
             </div>
-            <FormField
-              control={form.control}
-              name="apiKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gemini API Key</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Enter your Gemini API key"
-                      {...field}
-                      aria-label="Gemini API Key Input"
-                    />
-                  </FormControl>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Your API key is stored only in your browser and never sent
-                    to our servers.
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </CardContent>
           <CardFooter>
             <Button
@@ -468,16 +412,6 @@ export function CodeInputForm({
                 "Review Code"
               )}
             </Button>
-            {apiKeyError && (
-              <div className="flex items-start">
-                <div className="ml-4 mt-2 w-full">
-                  <Alert variant="destructive">
-                    <AlertTitle>API Key Required</AlertTitle>
-                    <AlertDescription>{apiKeyError}</AlertDescription>
-                  </Alert>
-                </div>
-              </div>
-            )}
           </CardFooter>
         </form>
       </Form>

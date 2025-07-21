@@ -37,7 +37,6 @@ export async function getAICodeReview(
   code: string,
   language: string,
   strictness: StrictnessLevel,
-  apiKey: string,
   continuation?: boolean,
   previousCode?: string
 ): Promise<CodeReviewResult> {
@@ -57,8 +56,7 @@ export async function getAICodeReview(
       previousCode,
     };
     const result: CodeQualityCritiqueOutput = await codeQualityCritique(
-      input,
-      apiKey
+      input
     );
     // Detect [CONTINUE] in correctedCode
     const isContinue =
