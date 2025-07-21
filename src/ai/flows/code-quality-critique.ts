@@ -50,10 +50,9 @@ export type CodeQualityCritiqueOutput = z.infer<
 >;
 
 export async function codeQualityCritique(
-  input: CodeQualityCritiqueInput,
-  apiKey?: string
+  input: CodeQualityCritiqueInput
 ): Promise<CodeQualityCritiqueOutput> {
-  return codeQualityCritiqueFlow(input, apiKey);
+  return codeQualityCritiqueFlow(input);
 }
 
 const prompt = ai.definePrompt({
@@ -95,9 +94,8 @@ Your feedback should be structured clearly in the 'feedback' field. Ensure any '
 });
 
 export async function codeQualityCritiqueFlow(
-  input: CodeQualityCritiqueInput,
-  apiKey?: string
+  input: CodeQualityCritiqueInput
 ): Promise<CodeQualityCritiqueOutput> {
-  const { output } = await prompt(input, apiKey ? { apiKey } : undefined);
+  const { output } = await prompt(input);
     return output!;
   }
